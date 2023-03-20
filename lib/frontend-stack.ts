@@ -27,18 +27,17 @@ export class FrontendStack extends cdk.Stack {
       default: "Z02532832CD89DPG6UEAB",
     });
 
-    // Create an SSL/TLS certificate for the domain
-    const certificate = new acm.Certificate(this, "Certificate", {
+    const certificate = new acm.CfnCertificate(this, "Certificate", {
       domainName: "davidhidalgo.live",
-      validation: acm.CertificateValidation.fromDns(
-        new route53.HostedZone(this, "hostedZone", {
-          //hostedZoneId: cdk.Fn.HOSTED_DNS_ZONE_ID,
-          zoneName: "davidhidalgo.live",
-        })
-      ),
+      validationMethod: "DNS",
+      domainValidationOptions: [
+        {
+          domainName: "davidhidalgo.live",
+          hostedZoneId: HOSTED_DNS_ZONE_ID.valueAsString,
+        },
+      ],
     });
 
-    // Create a CloudFront origin access identity
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(
       this,
       "TheCloudFrontOriginAccessIdentity",
@@ -49,6 +48,7 @@ export class FrontendStack extends cdk.Stack {
 
     const distributionConfigProperty: cloudfront.CfnDistribution.DistributionConfigProperty =
       {
+        aliases: [DOMAIN_NAME.valueAsString],
         defaultCacheBehavior: {
           targetOriginId: "the-s3-bucket",
           viewerProtocolPolicy: "allow-all",
@@ -57,8 +57,7 @@ export class FrontendStack extends cdk.Stack {
             queryString: false,
           },
         },
-        enabled: true,
-        aliases: [DOMAIN_NAME.valueAsString],
+        defaultRootObject: "index.html",
         customErrorResponses: [
           {
             errorCode: 403,
@@ -67,37 +66,25 @@ export class FrontendStack extends cdk.Stack {
             responsePagePath: "/404.html",
           },
         ],
-        customOrigin: {
-          dnsName: "dnsName",
-          originProtocolPolicy: "originProtocolPolicy",
-          originSslProtocols: ["originSslProtocols"],
-
-          // the properties below are optional
-          httpPort: 123,
-          httpsPort: 123,
-        },
-        defaultRootObject: "index.html",
-        httpVersion: "httpVersion",
-        ipv6Enabled: false,
-        logging: {
-          bucket: "bucket",
-
-          // the properties below are optional
-          includeCookies: false,
-          prefix: "prefix",
-        },
+        enabled: true,
+        /*         customOrigin: {
+          dnsName: 'dnsName',
+          originProtocolPolicy: 'originProtocolPolicy',
+          originSslProtocols: ['originSslProtocols'],
+        }, */
+        httpVersion: "http2",
         origins: [
           {
             domainName: `${S3_BUCKET_NAME.valueAsString}.s3.amazonaws.com`,
             id: "the-s3-bucket",
             s3OriginConfig: {
-              originAccessIdentity: `origin-access-identity/cloudfront/${originAccessIdentity}`,
+              originAccessIdentity: `origin-access-identity/cloudfront/${originAccessIdentity.originAccessIdentityName}`,
             },
           },
         ],
         priceClass: "PriceClass_All",
         viewerCertificate: {
-          acmCertificateArn: certificate.certificateArn,
+          acmCertificateArn: certificate.ref,
           minimumProtocolVersion: "TLSv1",
           sslSupportMethod: "sni-only",
         },

@@ -109,7 +109,6 @@ export class BackendStack extends cdk.Stack {
         TABLE_NAME: dynamoDBTableName.valueAsString,
       },
     });
-    //table.grantReadWriteData(lambdaPost);
 
     const lambdaPatch = new lambda.Function(this, "LambdaPatchFunction", {
       functionName: lambdaPatchName.valueAsString,
