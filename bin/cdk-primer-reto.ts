@@ -1,14 +1,10 @@
 #!/usr/bin/env node
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
-import { CdkPrimerRetoStack } from "../lib/cdk-primer-reto-stack";
 import { MainStack } from "../lib/main-stack";
-import { DBStack } from "../lib/db-stack";
-import { BackendStack } from "../lib/backend-stack";
-import { FrontendStack } from "../lib/frontend-stack";
 
 const app = new cdk.App();
-new FrontendStack(app, "FrontendStack", {
+new MainStack(app, "MainStack", {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
